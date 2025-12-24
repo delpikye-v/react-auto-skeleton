@@ -1,0 +1,79 @@
+{
+  "name": "react-auto-skeleton-z",
+  "version": "1.0.0",
+  "description": "Automatic skeleton UI generation for React components",
+  "license": "MIT",
+  "author": "Delpi.Kye",
+
+  "sideEffects": [
+    "*.css"
+  ],
+
+  "main": "build/index.cjs",
+  "module": "build/index.esm.js",
+  "types": "build/index.d.ts",
+
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.esm.js",
+      "require": "./build/index.cjs"
+    },
+    "./styles.css": "./build/styles.css"
+  },
+
+  "files": [
+    "build"
+  ],
+
+  "scripts": {
+    "clean": "rimraf build",
+    "build": "rollup -c",
+    "cb": "npm run clean && npm run build",
+    "prepublishOnly": "npm run build"
+  },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/delpikye-v/react-auto-skeleton.git"
+  },
+  "homepage": "https://github.com/delpikye-v/react-auto-skeleton#readme",
+  "bugs": {
+    "url": "https://github.com/delpikye-v/react-auto-skeleton/issues"
+  },
+
+  "keywords": [
+    "react",
+    "skeleton",
+    "skeleton-ui",
+    "loading",
+    "ui",
+    "react-components",
+    "react-hooks",
+    "react-library",
+    "design-system",
+    "micro-ui"
+  ],
+
+  "peerDependencies": {
+    "react": ">=17"
+  },
+
+  "dependencies": {},
+
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.1",
+    "@types/react": "^17.0.90",
+
+    "rimraf": "^3.0.2",
+    "rollup": "^2.56.3",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.29.0",
+    "rollup-plugin-postcss": "^4.0.2",
+
+    "typescript": "^4.4.2",
+    "tslib": "^2.3.1"
+  }
+}
