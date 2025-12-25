@@ -1,54 +1,60 @@
-### 🦴 react-auto-skeleton-z
 
-- Automatic skeleton UI generation for React components
-- Zero-config skeletons inferred directly from your component tree.
-- Plugin-first skeleton engine
+# 🦴 react-auto-skeleton-z
 
-<a href="https://codesandbox.io/p/sandbox/7mdmyf" target="_blank">LIVE EXAMPLE</a>
+[![NPM](https://img.shields.io/npm/v/react-auto-skeleton-z.svg)](https://www.npmjs.com/package/react-auto-skeleton-z)
+![Downloads](https://img.shields.io/npm/dt/react-auto-skeleton-z.svg)
 
 ---
 
-#### ✨ Features
+Automatic skeleton UI generation for React components.  
+Plugin-first, component-driven, layout-aware skeletons — no wrapper required.  
 
-- 🦴 Auto-generate skeleton UI from real components
-
-- 🧠 Heuristic-based inference (text / box / circle)
-
-- 🔌 Plugin system (createSkeletonPlugin)
-
-- 🎯 Custom skeleton per component
-
-- 🪝 Hook API: useAutoSkeleton
-
-- ⚡ Zero layout shift (layout-aware)
-
-- 🧩 Works with any UI library (Antd / MUI / custom)
+[Live Example](https://codesandbox.io/s/react-auto-skeleton-example-7mdmyf)
 
 ---
 
-#### 📦 Installation
+### ✨ Features
 
-```ts
+- Auto-generate skeletons from real components  
+- Component-driven (`Component.skeleton`) or plugin-driven
+- Layout-aware → zero layout shift  
+- Async / lazy component support  
+- Works with any UI library (Antd / MUI / custom)  
+- Hook API: `useAutoSkeleton`  
+
+---
+
+### 📦 Installation
+
+```bash
 npm install react-auto-skeleton-z
 # or
 yarn add react-auto-skeleton-z
 ```
 
+- Import global CSS for animation:
+
+```ts
+import "react-auto-skeleton-z/styles.css"
+```
+
 ---
 
-#### 🚀 Usage
+### 🚀 Examples
 
-##### 1️⃣ Basic usage
-```ts
-// require
+#### 1️⃣ Basic usage (component `.skeleton` property)
+
+```tsx
+import React from "react"
+import ReactDOM from "react-dom"
+import { AutoSkeleton, SkeletonCircle, SkeletonText, SkeletonRect } from "react-auto-skeleton-z"
 import "react-auto-skeleton-z/styles.css"
 
-import { AutoSkeleton } from "react-auto-skeleton-z"
-
+// Real component
 function UserCard({ user }) {
   return (
-    <div style={{ width: 300 }}>
-      <img src={user.avatar} />
+    <div style={{ width: 300, padding: 16, border: "1px solid #ccc", borderRadius: 8 }}>
+      <img src={user.avatar} style={{ width: 64, height: 64, borderRadius: "50%" }} />
       <h3>{user.name}</h3>
       <p>{user.email}</p>
       <button>Follow</button>
@@ -56,126 +62,167 @@ function UserCard({ user }) {
   )
 }
 
-export function App({ loading, user }) {
+// Define skeleton directly on component
+UserCard.skeleton = () => (
+  <div style={{ width: 300, padding: 16, border: "1px solid #ccc", borderRadius: 8 }}>
+    <SkeletonCircle style={{ width: 64, height: 64 }} />
+    <SkeletonText />
+    <SkeletonText />
+    <SkeletonRect style={{ width: "100%", height: 32, marginTop: 8 }} />
+  </div>
+)
+
+const fakeUser = { avatar: "https://i.pravatar.cc/64", name: "John Doe", email: "john@example.com" }
+
+function App({ loading }) {
   return (
     <AutoSkeleton loading={loading}>
-      <UserCard user={user} />
+      <UserCard user={fakeUser} />
     </AutoSkeleton>
   )
 }
 
+ReactDOM.render(<App loading={true} />, document.getElementById("root"))
 ```
 
-- loading=false → render real UI
+✅ Skeleton appears automatically when `loading=true`  
+✅ Real UI renders when `loading=false`
 
-- loading=true → render inferred skeleton
 
-##### 2️⃣ Custom skeleton per component
 ```ts
-import {
-  SkeletonCircle,
-  SkeletonText,
-  SkeletonRect,
-} from "react-auto-skeleton-z"
+// Profile.tsx => Next example
+import React from "react"
+import { SkeletonCircle, SkeletonText } from "react-auto-skeleton-z"
 
-function UserCard() {
-  return (...)
+export default function Profile({ user }) {
+  return (
+    <div>
+      <img src={user.avatar} />
+      <h3>{user.name}</h3>
+    </div>
+  )
 }
 
-UserCard.skeleton = () => (
-  <div style={{ width: 300 }}>
+// Add skeleton for AutoSkeleton
+Profile.skeleton = () => (
+  <div>
     <SkeletonCircle />
     <SkeletonText />
-    <SkeletonText />
-    <SkeletonRect />
   </div>
 )
+
+
+// lazy profile
+const LazyProfile = lazy(() => import("./Profile"))
 ```
 
-##### 3️⃣ Plugin system (createSkeletonPlugin)
+---
+
+#### 2️⃣ Plugin system
 
 ```ts
-import { AutoSkeleton, createSkeletonPlugin } from "react-auto-skeleton-z"
+import { createSkeletonPlugin, AutoSkeleton } from "react-auto-skeleton-z"
 
-export const AntdPlugin = createSkeletonPlugin({
-  name: "antd",
-
+const ProfilePlugin = createSkeletonPlugin({
+  name: "profile",
   rules: [
     {
-      match: /Avatar/,
-      skeleton: "circle",
-    },
+      match: (el) => el.type?.name === "Profile", 
+      skeleton: "circle"
+    }
   ],
 })
 
-// import { AutoSkeleton } from "react-auto-skeleton-z"
-
-<AutoSkeleton
-  loading
-  plugins={[AntdPlugin]}
->
-  <Profile />
+<AutoSkeleton loading plugins={[ProfilePlugin]}>
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyProfile />
+  </Suspense>
 </AutoSkeleton>
 ```
 
+- Plugin allows **automatic detection** without defining `.skeleton` for every component.  
 
-##### 4️⃣ Hook API (useAutoSkeleton)
+---
+
+#### 3️⃣ useAutoSkeleton hook
 
 ```ts
+import React, { lazy, Suspense } from "react"
 import { useAutoSkeleton } from "react-auto-skeleton-z"
+
+const LazyProfile = lazy(() => import("./Profile"))
 
 function Page({ loading }) {
   const content = useAutoSkeleton(
-    <Profile />,
+    <Suspense fallback={<div>Loading...</div>}>
+      <LazyProfile />
+    </Suspense>,
     { loading }
   )
 
   return <>{content}</>
 }
+
+export default Page
 ```
 
-##### 5️⃣ Custom rules (layout-aware)
+- Returns a tree with skeletons automatically injected.  
+
+---
+
+#### 4️⃣ Async / Lazy components
+
+```ts
+import React, { lazy, Suspense } from "react"
+import { AutoSkeleton } from "react-auto-skeleton-z"
+
+const LazyProfile = lazy(() => import("./Profile"))
+
+<AutoSkeleton loading>
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyProfile />
+  </Suspense>
+</AutoSkeleton>
+```
+
+- Lazy components automatically show skeleton until loaded.
+
+---
+
+#### 5️⃣ Custom rules (layout-aware)
+
 ```ts
 <AutoSkeleton
   loading
   rules={[
     {
-      match: (el) => el.props.style?.borderRadius === "50%",
+      match: (el) => el.props?.style?.borderRadius === "50%",
       skeleton: "circle",
+    },
+    {
+      match: (el) => el.type === "button",
+      skeleton: "rect",
     },
   ]}
 >
-  <Avatar />
+  <UserCard />
 </AutoSkeleton>
-
 ```
 
----
-
-#### 🧠 Why use react-auto-skeleton-z?
-
-- No duplicated skeleton components
-
-- No layout mismatch
-
-- No manual wiring
-
-- Component-driven skeletons
-
-- Plugin-friendly architecture
-
-- Perfect for:
-
-  - dashboards
-
-  - lists
-
-  - cards
-
-  - loading-heavy UIs
+- Rules let you match elements dynamically based on props, type, or other heuristics.  
 
 ---
 
-#### 📄 License
+### 🧠 Why use react-auto-skeleton-z?
+
+- Zero manual wiring  
+- Layout-aware → no layout shift  
+- Component-driven → easy maintenance  
+- Plugin-friendly → reusable rules  
+- Perfect for dashboards, lists, cards, or heavy-loading UIs  
+
+---
+
+### 📄 License
 
 MIT
