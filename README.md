@@ -1,8 +1,6 @@
 
 # 🦴 react-auto-skeleton-z
 
----
-
 [![NPM](https://img.shields.io/npm/v/react-auto-skeleton-z.svg)](https://www.npmjs.com/package/react-auto-skeleton-z)
 ![Downloads](https://img.shields.io/npm/dt/react-auto-skeleton-z.svg)
 
@@ -18,7 +16,7 @@ Plugin-first, component-driven, layout-aware skeletons — no wrapper required.
 ### ✨ Features
 
 - Auto-generate skeletons from real components  
-- Component-driven (`Component.skeleton`) or plugin-driven  
+- Component-driven (`Component.skeleton`) or plugin-driven
 - Layout-aware → zero layout shift  
 - Async / lazy component support  
 - Works with any UI library (Antd / MUI / custom)  
@@ -90,23 +88,55 @@ ReactDOM.render(<App loading={true} />, document.getElementById("root"))
 ✅ Skeleton appears automatically when `loading=true`  
 ✅ Real UI renders when `loading=false`
 
+
+```ts
+// Profile.tsx => Next example
+import React from "react"
+import { SkeletonCircle, SkeletonText } from "react-auto-skeleton-z"
+
+export default function Profile({ user }) {
+  return (
+    <div>
+      <img src={user.avatar} />
+      <h3>{user.name}</h3>
+    </div>
+  )
+}
+
+// Add skeleton for AutoSkeleton
+Profile.skeleton = () => (
+  <div>
+    <SkeletonCircle />
+    <SkeletonText />
+  </div>
+)
+
+
+// lazy profile
+const LazyProfile = lazy(() => import("./Profile"))
+```
+
 ---
 
 #### 2️⃣ Plugin system
 
 ```ts
-import { AutoSkeleton, createSkeletonPlugin } from "react-auto-skeleton-z"
+import { createSkeletonPlugin, AutoSkeleton } from "react-auto-skeleton-z"
 
-const AntdPlugin = createSkeletonPlugin({
-  name: "antd",
+const ProfilePlugin = createSkeletonPlugin({
+  name: "profile",
   rules: [
-    { match: /Avatar/, skeleton: "circle" },
-    { match: /Button/, skeleton: "rect" },
+    {
+      match: (el) => el.type?.name === "Profile", 
+      skeleton: "circle"
+    }
   ],
 })
 
-<AutoSkeleton loading plugins={[AntdPlugin]}>
-  <Profile />
+<AutoSkeleton loading plugins={[ProfilePlugin]}>
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyProfile />
+  </Suspense>
 </AutoSkeleton>
 ```
 
@@ -117,16 +147,23 @@ const AntdPlugin = createSkeletonPlugin({
 #### 3️⃣ useAutoSkeleton hook
 
 ```ts
+import React, { lazy, Suspense } from "react"
 import { useAutoSkeleton } from "react-auto-skeleton-z"
+
+const LazyProfile = lazy(() => import("./Profile"))
 
 function Page({ loading }) {
   const content = useAutoSkeleton(
-    <Profile />,
+    <Suspense fallback={<div>Loading...</div>}>
+      <LazyProfile />
+    </Suspense>,
     { loading }
   )
 
   return <>{content}</>
 }
+
+export default Page
 ```
 
 - Returns a tree with skeletons automatically injected.  
@@ -136,13 +173,15 @@ function Page({ loading }) {
 #### 4️⃣ Async / Lazy components
 
 ```ts
-import React, { lazy } from "react"
+import React, { lazy, Suspense } from "react"
 import { AutoSkeleton } from "react-auto-skeleton-z"
 
 const LazyProfile = lazy(() => import("./Profile"))
 
 <AutoSkeleton loading>
-  <LazyProfile />
+  <Suspense fallback={<div>Loading...</div>}>
+    <LazyProfile />
+  </Suspense>
 </AutoSkeleton>
 ```
 
